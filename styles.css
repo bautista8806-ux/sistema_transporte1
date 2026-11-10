@@ -1,0 +1,222 @@
+/* Custom UI Enhancements & Layout Logic */
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --sidebar-width: 260px;
+    --navbar-height: 64px;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #0f172a;
+    overflow-x: hidden;
+}
+
+/* Layout Structure */
+.navbar {
+    height: var(--navbar-height);
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+}
+
+.main-layout {
+    margin-top: var(--navbar-height);
+    display: flex;
+    min-height: calc(100vh - var(--navbar-height));
+    position: relative;
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: #0f172a;
+    color: #94a3b8;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    z-index: 30;
+    position: fixed;
+    top: var(--navbar-height);
+    bottom: 0;
+    left: 0;
+    overflow-y: auto;
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.content-area {
+    flex: 1;
+    padding: 1.5rem;
+    transition: margin-left 0.3s ease;
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+}
+
+.content-area.expanded {
+    margin-left: 0;
+    width: 100%;
+}
+
+/* View Control */
+.page-view {
+    display: none;
+    animation: fadeIn 0.25s ease-in-out forwards;
+}
+
+.page-view.active {
+    display: block;
+}
+
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sidebar Navigation Items */
+.sidebar-menu {
+    list-style: none;
+    padding: 0.75rem;
+    margin: 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.menu-item:hover {
+    background-color: #1e293b;
+    color: #f8fafc;
+}
+
+.menu-item.active {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+.menu-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Custom Utility UI Components */
+.hero-banner {
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.9), rgba(37, 99, 235, 0.8)), url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+    min-height: 500px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.search-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 650px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Styles */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+}
+
+.modal-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-box {
+    background: #ffffff;
+    border-radius: 0.75rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    transform: scale(0.95);
+    transition: transform 0.25s ease;
+    overflow: hidden;
+}
+
+.modal-backdrop.active .modal-box {
+    transform: scale(1);
+}
+
+.modal-box.modal-lg {
+    max-width: 750px;
+}
+
+/* Seat Selector Grid for Booking */
+.bus-seat {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.bus-seat.available { background-color: #e2e8f0; color: #334155; }
+.bus-seat.available:hover { background-color: #93c5fd; }
+.bus-seat.selected { background-color: #2563eb; color: white; }
+.bus-seat.occupied { background-color: #ef4444; color: white; cursor: not-allowed; opacity: 0.6; }
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    .content-area {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+}

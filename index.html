@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Transporte de Bus - Reserva e Intranet</title>
+    <!-- Tailwind CSS for rapid modern utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Iconography -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Dashboard Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- BARRA DE NAVEGACIÓN SUPERIOR GLOBAL -->
+    <header class="navbar">
+        <div class="flex items-center gap-4">
+            <button id="toggle-sidebar-btn" class="p-2 text-slate-600 hover:text-brand-600 focus:outline-none text-xl" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <span class="text-xl font-bold text-brand-600 flex items-center gap-2 cursor-pointer" onclick="navigateTo('view-home')">
+                <i class="fa-solid fa-bus-simple text-2xl"></i> TransPorte
+            </span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6">
+            <a href="#" id="nav-link-home" class="font-medium text-slate-600 hover:text-brand-600 transition" onclick="navigateTo('view-home')">Home</a>
+            <a href="#" id="nav-link-quienes" class="font-medium text-slate-600 hover:text-brand-600 transition" onclick="navigateTo('view-quienes-somos')">Quiénes Somos</a>
+            <a href="#" id="nav-link-contacto" class="font-medium text-slate-600 hover:text-brand-600 transition" onclick="navigateTo('view-contactanos')">Contáctanos</a>
+        </nav>
+        <div class="flex items-center gap-3">
+            <button class="bg-brand-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-brand-700 transition shadow-sm text-sm" id="nav-login-btn" onclick="navigateTo('view-login')">
+                <i class="fa-solid fa-right-to-bracket mr-1"></i> Iniciar Sesión
+            </button>
+            <div id="user-profile-badge" class="hidden items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full">
+                <i class="fa-solid fa-circle-user text-brand-600 text-lg"></i>
+                <span id="current-username" class="font-medium text-sm text-slate-800">Admin</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="main-layout">
+
+        <!-- SIDEBAR DE NAVEGACIÓN (Administrativo y Gestión) -->
+        <aside id="sidebar" class="sidebar collapsed">
+            <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-brand-600 flex items-center justify-center text-white font-bold text-lg">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <p class="text-white font-medium text-sm leading-tight" id="sidebar-user-name">Administrador</p>
+                    <p class="text-xs text-slate-400" id="user-role-display">Panel de Control</p>
+                </div>
+            </div>
+            <ul class="sidebar-menu flex-1">
+                <li onclick="switchSection('dashboard')" id="menu-dashboard" class="menu-item active">
+                    <i class="fa-solid fa-chart-pie"></i> Dashboard
+                </li>
+                <li onclick="switchSection('configuracion')" id="menu-configuracion" class="menu-item">
+                    <i class="fa-solid fa-gear"></i> Configuración
+                </li>
+                <li onclick="switchSection('usuarios')" id="menu-usuarios" class="menu-item">
+                    <i class="fa-solid fa-users"></i> Usuarios
+                </li>
+                <li onclick="switchSection('vehiculos')" id="menu-vehiculos" class="menu-item">
+                    <i class="fa-solid fa-bus"></i> Vehículos
+                </li>
+                <li onclick="switchSection('rutas')" id="menu-rutas" class="menu-item">
+                    <i class="fa-solid fa-route"></i> Rutas
+                </li>
+                <li onclick="switchSection('prog-rutas')" id="menu-prog-rutas" class="menu-item">
+                    <i class="fa-solid fa-calendar-days"></i> Programación Rutas
+                </li>
+                <li onclick="switchSection('conductores')" id="menu-conductores" class="menu-item">
+                    <i class="fa-solid fa-id-card"></i> Conductores
+                </li>
+                <li onclick="switchSection('prog-conductores')" id="menu-prog-conductores" class="menu-item">
+                    <i class="fa-solid fa-clipboard-user"></i> Prog. Conductores
+                </li>
+                <li onclick="switchSection('clientes')" id="menu-clientes" class="menu-item">
+                    <i class="fa-solid fa-user-tag"></i> Clientes
+                </li>
+                <li onclick="switchSection('reservas-admin')" id="menu-reservas-admin" class="menu-item">
+                    <i class="fa-solid fa-ticket"></i> Reservas
+                </li>
+                <li onclick="switchSection('ventas')" id="menu-ventas" class="menu-item">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Ventas
+                </li>
+            </ul>
+            <div class="p-4 border-t border-slate-800">
+                <button class="w-full bg-rose-600 hover:bg-rose-700 text-white py-2 px-4 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO DINÁMICO DE PÁGINAS -->
+        <main id="main-content" class="content-area expanded">
+
+            <!-- 1. LANDING PAGE / HOME -->
+            <section id="view-home" class="page-view active">
+                <div class="hero-banner mb-8">
+                    <div class="search-card">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Reserva tus pasajes de bus</h2>
+                        <div class="flex gap-6 mb-4 text-sm font-medium text-slate-700">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="tripType" value="solo-ida" checked class="text-brand-600 focus:ring-brand-500" onchange="toggleReturnDate(false)"> Solo Ida
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="tripType" value="ida-regreso" class="text-brand-600 focus:ring-brand-500" onchange="toggleReturnDate(true)"> Ida y Regreso
+                            </label>
+                        </div>
+                        <form id="search-bus-form" onsubmit="handleSearchTrips(event)">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Origen</label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-location-dot absolute left-3 top-3 text-slate-400"></i>
+                                        <input type="text" id="search-origen" class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Ej: Medellín" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Destino</label>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-location-crosshairs absolute left-3 top-3 text-slate-400"></i>
+                                        <input type="text" id="search-destino" class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Ej: Ciudad Bolívar" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Fecha Salida</label>
+                                    <input type="date" id="search-fecha-salida" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Fecha Regreso</label>
+                                    <input type="date" id="search-fecha-regreso" class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-100 focus:ring-2 focus:ring-brand-500 focus:outline-none" disabled>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-lg shadow-md transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass"></i> Buscar Viajes
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Featured Destinations -->
+                <div class="max-w-6xl mx-auto">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Destinos Populares</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition">
+                            <img src="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=500&q=80" class="h-32 w-full object-cover" alt="Guatapé">
+                            <div class="p-3">
+                                <h4 class="font-bold text-slate-800">Medellín - Guatapé</h4>
+                                <p class="text-xs text-slate-500">Salidas diarias cada 30 min</p>
+                                <p class="text-brand-600 font-bold mt-2">$22.000 COP</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition">
+                            <img src="https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=500&q=80" class="h-32 w-full object-cover" alt="Jardín">
+                            <div class="p-3">
+                                <h4 class="font-bold text-slate-800">Medellín - Jardín</h4>
+                                <p class="text-xs text-slate-500">Ruta directa con confort</p>
+                                <p class="text-brand-600 font-bold mt-2">$35.000 COP</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition">
+                            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=80" class="h-32 w-full object-cover" alt="Santa Fe">
+                            <div class="p-3">
+                                <h4 class="font-bold text-slate-800">Medellín - Santa Fe</h4>
+                                <p class="text-xs text-slate-500">Autobuses climatizados</p>
+                                <p class="text-brand-600 font-bold mt-2">$18.000 COP</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition">
+                            <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=500&q=80" class="h-32 w-full object-cover" alt="Apartadó">
+                            <div class="p-3">
+                                <h4 class="font-bold text-slate-800">Caldas - Apartadó</h4>
+                                <p class="text-xs text-slate-500">Ruta exprés de gran recorrido</p>
+                                <p class="text-brand-600 font-bold mt-2">$75.000 COP</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. LOGIN Y ACCESO AL SISTEMA -->
+            <section id="view-login" class="page-view">
+                <div class="min-h-[70vh] flex items-center justify-center py-6">
+                    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                                <i class="fa-solid fa-bus"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-slate-800">¡Bienvenidos a TransPorte!</h2>
+                            <p class="text-xs text-slate-500 mt-1">Usa usuario: <b class="text-slate-700">admin</b> y contraseña: <b class="text-slate-700">1234</b> para ingresar a la Intranet.</p>
+                        </div>
+                        
+                        <form id="login-form" onsubmit="handleLogin(event)">
+                            <div class="mb-4">
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Usuario</label>
+                                <input type="text" id="login-user" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Ingrese su usuario" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Contraseña</label>
+                                <input type="password" id="login-password" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="••••••••" required>
+                            </div>
+                            <div class="flex justify-between items-center mb-6 text-sm">
+                                <a href="#" class="text-brand-600 hover:underline" onclick="openResetPasswordModal()">¿Olvidó su contraseña?</a>
+                                <a href="#" class="text-brand-600 hover:underline font-medium" onclick="openRegisterModal()">Registrarse</a>
+                            </div>
+                            <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg shadow-md transition">
+                                Iniciar Sesión
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. RESULTADOS DE BÚSQUEDA Y RESERVA DE PASAJES -->
+            <section id="view-resultados" class="page-view">
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-xl border border-slate-200">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800" id="search-results-title">Rutas Disponibles</h2>
+                            <p class="text-xs text-slate-500" id="search-results-subtitle">Mostrando salidas encontradas para tu criterio</p>
+                        </div>
+                        <button class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition" onclick="navigateTo('view-home')">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Modificar Búsqueda
+                        </button>
+                    </div>
+
+                    <div id="trip-results-container" class="space-y-4">
+                        <!-- Dynamic trip cards injected here via JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. VISTAS DEL DASHBOARD Y SECCIONES DE ADMINISTRACIÓN -->
+            <section id="view-admin-panel" class="page-view">
+                
+                <!-- SECCIÓN DASHBOARD ANALÍTICO -->
+                <div id="section-dashboard" class="admin-section active space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-route"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase">Rutas Activas</p>
+                                <h3 class="text-2xl font-bold text-slate-800" id="dash-stat-rutas">12</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-ticket"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase">Reservas Hoy</p>
+                                <h3 class="text-2xl font-bold text-slate-800" id="dash-stat-reservas">148</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-bus"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase">Vehículos</p>
+                                <h3 class="text-2xl font-bold text-slate-800" id="dash-stat-bus">24</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-sack-dollar"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-400 uppercase">Ingresos Día</p>
+                                <h3 class="text-2xl font-bold text-slate-800" id="dash-stat-ventas">$4.850.000</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> TOP 5 RUTAS CON MAYOR DEMANDA
+                            </h3>
+                            <div class="relative h-64">
+                                <canvas id="chartMayorDemanda"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                            <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-trend-down text-rose-500"></i> TOP 5 RUTAS CON MENOR DEMANDA
+                            </h3>
+                            <div class="relative h-64">
+                                <canvas id="chartMenorDemanda"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-brand-600"></i> SALIDAS DE TRANSPORTE Y OCUPACIÓN
+                            </h3>
+                            <span class="text-xs bg-brand-100 text-brand-700 px-2.5 py-1 rounded-full font-medium">Actualizado en vivo</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600">
+                                <thead class="bg-slate-100 text-xs text-slate-500 uppercase">
+                                    <tr>
+                                        <th class="p-3">Origen</th>
+                                        <th class="p-3">Destino</th>
+                                        <th class="p-3">Hora Salida</th>
+                                        <th class="p-3">Asientos Ocupados</th>
+                                        <th class="p-3">Asientos Disponibles</th>
+                                        <th class="p-3">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold text-slate-800">Medellín</td>
+                                        <td class="p-3">Ciudad Bolívar</td>
+                                        <td class="p-3">08:00 AM</td>
+                                        <td class="p-3 text-amber-600 font-bold">12</td>
+                                        <td class="p-3 text-emerald-600 font-bold">4</td>
+                                        <td class="p-3"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs">En Abordaje</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold text-slate-800">Medellín</td>
+                                        <td class="p-3">Alejandría</td>
+                                        <td class="p-3">09:30 AM</td>
+                                        <td class="p-3 text-amber-600 font-bold">7</td>
+                                        <td class="p-3 text-emerald-600 font-bold">9</td>
+                                        <td class="p-3"><span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">Programado</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold text-slate-800">Caldas</td>
+                                        <td class="p-3">Apartadó</td>
+                                        <td class="p-3">10:00 AM</td>
+                                        <td class="p-3 text-amber-600 font-bold">14</td>
+                                        <td class="p-3 text-emerald-600 font-bold">2</td>
+                                        <td class="p-3"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs">Casi Lleno</span></td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold text-slate-800">Medellín</td>
+                                        <td class="p-3">Guatapé</td>
+                                        <td class="p-3">11:15 AM</td>
+                                        <td class="p-3 text-amber-600 font-bold">9</td>
+                                        <td class="p-3 text-emerald-600 font-bold">7</td>
+                                        <td class="p-3"><span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs">Programado</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN CONFIGURACIÓN -->
+                <div id="section-configuracion" class="admin-section">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm max-w-3xl">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4 border-b pb-2">Configuración del Sistema</h2>
+                        <form onsubmit="event.preventDefault(); showSystemAlert('Configuraciones guardadas con éxito.');">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Nombre de la Empresa</label>
+                                    <input type="text" value="TransPorte S.A.S." class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Moneda del Sistema</label>
+                                    <select class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                        <option>COP ($) - Peso Colombiano</option>
+                                        <option>USD ($) - Dólar Estadounidense</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="cfg-notif" checked class="w-4 h-4 text-brand-600 rounded">
+                                    <label for="cfg-notif" class="text-sm text-slate-700">Habilitar notificaciones por correo de reservas</label>
+                                </div>
+                            </div>
+                            <button class="mt-6 bg-brand-600 hover:bg-brand-700 text-white px-5 py-2 rounded-lg font-medium shadow-sm transition">Guardar Cambios</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DENTRO DEL MOTOR CRUD GENERICO -->
+                <div id="section-crud-template" class="admin-section">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-5">
+                            <div>
+                                <h2 id="crud-title" class="text-xl font-bold text-slate-800">Gestión</h2>
+                                <p id="crud-subtitle" class="text-xs text-slate-500">Módulo de administración de datos</p>
+                            </div>
+                            <button class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition flex items-center justify-center gap-2" id="btn-nuevo-registro" onclick="triggerCreateModal()">
+                                <i class="fa-solid fa-plus"></i> Nuevo Registro
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600" id="dynamic-admin-table">
+                                <thead class="bg-slate-100 text-xs text-slate-500 uppercase border-b" id="dynamic-table-head"></thead>
+                                <tbody class="divide-y divide-slate-200" id="dynamic-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- 5. VISTAS INFORMATIVAS STATIC -->
+            <section id="view-quienes-somos" class="page-view max-w-4xl mx-auto">
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <h2 class="text-3xl font-extrabold text-slate-800 mb-4">Quiénes Somos</h2>
+                    <p class="text-slate-600 leading-relaxed mb-4">
+                        Somos la empresa líder en soluciones de transporte terrestre intermunicipal, garantizando seguridad, rapidez y comodidad en cada viaje. Con más de 20 años conectando regiones y familias, nuestro compromiso es la innovación constante y el excelente servicio al usuario.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                            <i class="fa-solid fa-shield-halved text-brand-600 text-3xl mb-2"></i>
+                            <h4 class="font-bold text-slate-800 mb-1">Seguridad</h4>
+                            <p class="text-xs text-slate-500">Conductores certificados y mantenimiento continuo.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                            <i class="fa-solid fa-clock text-brand-600 text-3xl mb-2"></i>
+                            <h4 class="font-bold text-slate-800 mb-1">Puntualidad</h4>
+                            <p class="text-xs text-slate-500">Cumplimiento estricto en los horarios de salida.</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                            <i class="fa-solid fa-couch text-brand-600 text-3xl mb-2"></i>
+                            <h4 class="font-bold text-slate-800 mb-1">Comodidad</h4>
+                            <p class="text-xs text-slate-500">Flotas modernas con Wi-Fi y conectores USB.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-contactanos" class="page-view max-w-3xl mx-auto">
+                <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                    <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Contáctanos</h2>
+                    <p class="text-slate-500 mb-6">Estamos para servirte. Comunícate con nuestro equipo de atención.</p>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-center gap-3 text-slate-700">
+                            <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 font-semibold uppercase">Línea Gratuita</p>
+                                <p class="font-bold">01 8000 910270</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 text-slate-700">
+                            <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-400 font-semibold uppercase">Correo Electrónico</p>
+                                <p class="font-bold">soporte@transporte.com.co</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); showSystemAlert('Mensaje enviado adecuadamente. Pronto nos comunicaremos con usted.');" class="space-y-4">
+                        <input type="text" placeholder="Su Nombre" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" required>
+                        <input type="email" placeholder="Su Correo" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" required>
+                        <textarea placeholder="Su Mensaje" rows="4" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" required></textarea>
+                        <button class="bg-brand-600 hover:bg-brand-700 text-white font-medium px-6 py-2.5 rounded-lg shadow transition">Enviar Mensaje</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODALES DE DIÁLOGO Y EDICIÓN -->
+
+    <!-- Modal Restablecer Contraseña -->
+    <div class="modal-backdrop" id="modal-reset-password">
+        <div class="modal-box">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800">Restablecer Contraseña</h3>
+                <button class="text-slate-400 hover:text-slate-600 text-xl font-bold" onclick="closeModal('modal-reset-password')">&times;</button>
+            </div>
+            <div class="p-6">
+                <p class="text-sm text-slate-600 mb-4">Ingrese su usuario o correo electrónico registrado para enviarle las instrucciones de recuperación.</p>
+                <input type="text" id="reset-input" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Usuario / Correo electrónico">
+            </div>
+            <div class="p-4 border-t flex justify-end gap-2 bg-slate-50">
+                <button class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium" onclick="closeModal('modal-reset-password')">Cancelar</button>
+                <button class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium" onclick="sendResetCode()">Enviar Código</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Registro Usuario Nuevo -->
+    <div class="modal-backdrop" id="modal-registro">
+        <div class="modal-box modal-lg">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800">Registro de Usuario</h3>
+                <button class="text-slate-400 hover:text-slate-600 text-xl font-bold" onclick="closeModal('modal-registro')">&times;</button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nombre Completo</label>
+                    <input type="text" id="reg-nombre" class="w-full px-3 py-2 border rounded-lg" placeholder="Nombre completo">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Número de Documento</label>
+                    <input type="text" id="reg-doc" class="w-full px-3 py-2 border rounded-lg" placeholder="N° Documento">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Correo Electrónico</label>
+                    <input type="email" id="reg-email" class="w-full px-3 py-2 border rounded-lg" placeholder="correo@ejemplo.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Contraseña</label>
+                    <input type="password" id="reg-pass" class="w-full px-3 py-2 border rounded-lg" placeholder="••••••••">
+                </div>
+            </div>
+            <div class="p-4 border-t flex justify-end gap-2 bg-slate-50">
+                <button class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium" onclick="closeModal('modal-registro')">Cancelar</button>
+                <button class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium" onclick="confirmRegister()">Guardar Registro</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal CRUD Genérico Dinámico -->
+    <div class="modal-backdrop" id="modal-crud-editor">
+        <div class="modal-box modal-lg">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 id="crud-modal-title" class="font-bold text-slate-800">Agregar Registro</h3>
+                <button class="text-slate-400 hover:text-slate-600 text-xl font-bold" onclick="closeModal('modal-crud-editor')">&times;</button>
+            </div>
+            <div class="p-6" id="crud-modal-body-fields">
+                <!-- Fields dynamically generated via JS -->
+            </div>
+            <div class="p-4 border-t flex justify-end gap-2 bg-slate-50">
+                <button class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium" onclick="closeModal('modal-crud-editor')">Cancelar</button>
+                <button class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium" onclick="saveCrudForm()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Reserva / Selección de Asientos -->
+    <div class="modal-backdrop" id="modal-booking-seats">
+        <div class="modal-box modal-lg">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <div>
+                    <h3 class="font-bold text-slate-800" id="booking-modal-title">Selección de Asientos</h3>
+                    <p class="text-xs text-slate-500" id="booking-modal-subtitle">Elija su ubicación en el bus</p>
+                </div>
+                <button class="text-slate-400 hover:text-slate-600 text-xl font-bold" onclick="closeModal('modal-booking-seats')">&times;</button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-3 text-center">Distribución de Asientos</h4>
+                    <div class="bg-slate-100 p-4 rounded-xl border border-slate-200 max-w-[220px] mx-auto">
+                        <div class="flex justify-end mb-4 border-b border-slate-300 pb-2">
+                            <span class="text-xs font-semibold text-slate-500"><i class="fa-solid fa-dharmachakra mr-1"></i>Conductor</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2" id="bus-seat-grid">
+                            <!-- Seat items injected via JS -->
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col justify-between">
+                    <div>
+                        <h4 class="font-bold text-slate-800 mb-2">Detalles del Pasaje</h4>
+                        <div class="space-y-2 text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border">
+                            <p><strong>Pasajero:</strong> <span id="book-passenger-name">Cliente General</span></p>
+                            <p><strong>Asiento(s):</strong> <span id="book-selected-seats-text" class="text-brand-600 font-bold">Ninguno</span></p>
+                            <p><strong>Precio Unitario:</strong> <span id="book-seat-price">$0</span></p>
+                            <hr>
+                            <p class="text-base text-slate-800"><strong>Total a Pagar:</strong> <span id="book-total-price" class="text-brand-600 font-extrabold">$0</span></p>
+                        </div>
+                    </div>
+                    <button class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg transition mt-4" onclick="confirmTripBooking()">
+                        Confirmar Reserva
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmación Eliminación -->
+    <div class="modal-backdrop" id="modal-confirm-delete">
+        <div class="modal-box">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 id="confirm-action-title" class="font-bold text-slate-800">Confirmar Eliminación</h3>
+                <button class="text-slate-400 hover:text-slate-600 text-xl font-bold" onclick="closeModal('modal-confirm-delete')">&times;</button>
+            </div>
+            <div class="p-6">
+                <p id="confirm-action-text" class="text-sm text-slate-600">¿Está seguro de eliminar este registro? Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="p-4 border-t flex justify-end gap-2 bg-slate-50">
+                <button class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium" onclick="closeModal('modal-confirm-delete')">Cancelar</button>
+                <button class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-medium" id="btn-execute-delete">Sí, Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mensaje Alerta Genérico -->
+    <div class="modal-backdrop" id="modal-alert-message">
+        <div class="modal-box">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800">Mensaje del Sistema</h3>
+                <button class="text-slate-400 hover:text-slate-600 text-xl font-bold" onclick="closeModal('modal-alert-message')">&times;</button>
+            </div>
+            <div class="p-6" id="alert-message-text">Mensaje del sistema.</div>
+            <div class="p-4 border-t flex justify-end bg-slate-50">
+                <button class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium" onclick="closeModal('modal-alert-message')">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Principal -->
+    <script src="script.js"></script>
+</body>
+</html>
